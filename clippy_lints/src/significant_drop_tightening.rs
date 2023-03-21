@@ -57,8 +57,7 @@ impl_lint_pass!(SignificantDropTightening<'_> => [SIGNIFICANT_DROP_TIGHTENING]);
 #[derive(Default)]
 pub struct SignificantDropTightening<'tcx> {
     /// Auxiliary structure used to avoid having to verify the same type multiple times.
-    seen_types: FxHashSet<Ty<'tcx>>,
-}
+    seen_types: FxHashSet<Ty<'tcx>>,}
 
 impl<'tcx> SignificantDropTightening<'tcx> {
     /// Unifies the statements of a block with its return expression.
@@ -296,22 +295,19 @@ impl Default for SigDropAuxParams {
 struct SigDropChecker<'cx, 'sdt, 'tcx> {
     cx: &'cx LateContext<'tcx>,
     seen_types: &'sdt mut FxHashSet<Ty<'tcx>>,
+    attr_name: Symbol,
 }
 
 impl<'cx, 'sdt, 'tcx> SigDropChecker<'cx, 'sdt, 'tcx> {
     pub(crate) fn new(cx: &'cx LateContext<'tcx>, seen_types: &'sdt mut FxHashSet<Ty<'tcx>>) -> Self {
         seen_types.clear();
-        Self { cx, seen_types }
+        let attr_name = sym!(has_significant_drop);
+        Self { cx, seen_types, attr_name }
     }
 
     pub(crate) fn has_sig_drop_attr(&mut self, ty: Ty<'tcx>) -> bool {
         if let Some(adt) = ty.ty_adt_def() {
-            let mut iter = get_attr(
-                self.cx.sess(),
-                self.cx.tcx.get_attrs_unchecked(adt.did()),
-                "has_significant_drop",
-            );
-            if iter.next().is_some() {
+            if self.cx.tcx.has_attr(adt, self.attr_name) {
                 return true;
             }
         }
